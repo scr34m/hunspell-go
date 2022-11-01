@@ -3,6 +3,8 @@ package hunspell
 import (
 	"crypto/sha1"
 	"encoding/hex"
+	"strings"
+	"unicode"
 )
 
 func reverse(s string) string {
@@ -95,4 +97,47 @@ func hasFlag(flags []rune, flag rune) bool {
 
 func hasCrossCheckedFlag(flag rune, flags []rune, matchEmpty bool) bool {
 	return (len(flags) == 0 && matchEmpty) || hasFlag(flags, flag)
+}
+
+const (
+	ExactCase = iota
+	TileCase
+	UpperCase
+)
+
+func (hs *hunSpell) caseOf(word string) int {
+	runes := []rune(word)
+
+	if hs.ignoreCase || len(runes) == 0 || !unicode.IsUpper(runes[0]) {
+		return ExactCase
+	}
+
+	// determine if we are title or lowercase (or something funky, in which it's exact)
+	seenUpper := false
+	seenLower := false
+	for _, r := range runes {
+		if unicode.IsLetter(r) {
+			if unicode.IsUpper(r) {
+				seenUpper = true
+			} else {
+				seenLower = true
+			}
+		}
+	}
+
+	if !seenLower {
+		return UpperCase
+	} else if !seenUpper {
+		return TileCase
+	} else {
+		return ExactCase
+	}
+}
+
+func (hs *hunSpell) cleanInput(s string) string {
+	if hs.needsInputCleaning {
+		return strings.ToLower(s)
+	} else {
+		return s
+	}
 }

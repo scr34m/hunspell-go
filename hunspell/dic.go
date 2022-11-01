@@ -58,6 +58,8 @@ func (hs *hunSpell) readDictionaryFile(file io.Reader) error {
 			word = line[:idx]
 		}
 
+		word = hs.cleanInput(word)
+
 		hs.dict[word] = dictEntry{word: word, flags: flags}
 	}
 

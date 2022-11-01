@@ -51,6 +51,8 @@ type hunSpell struct {
 
 	formStep          int
 	hasStemExceptions bool
+
+	ignoreCase bool
 }
 
 type HunSpell interface {
@@ -58,7 +60,7 @@ type HunSpell interface {
 	Stem(string) []string
 }
 
-func NewHunSpellReader(aff, dic io.Reader) (HunSpell, error) {
+func NewHunSpellReader(aff, dic io.Reader, ignoreCase bool) (HunSpell, error) {
 
 	h := &hunSpell{
 		seenPatterns:        map[string]int{},
@@ -74,11 +76,12 @@ func NewHunSpellReader(aff, dic io.Reader) (HunSpell, error) {
 		dict:                map[string]dictEntry{},
 		complexPrefixes:     false,
 		twoStageAffix:       false,
-		needsInputCleaning:  false,
+		needsInputCleaning:  ignoreCase,
 		needsOutputCleaning: false,
 		onlyincompound:      -1,
 		circumfix:           -1,
 		keepcase:            -1,
+		ignoreCase:          ignoreCase,
 	}
 
 	err := h.readAffixFile(aff)
@@ -100,7 +103,7 @@ func (hs *hunSpell) Lookup(s string) *dictEntry {
 }
 
 func (hs *hunSpell) Stem(s string) []string {
-	r := []rune(s)
+	r := []rune(hs.cleanInput(s))
 
 	f := hs.lookupWord(r, 0, len(r))
 	if f != nil {
@@ -109,8 +112,15 @@ func (hs *hunSpell) Stem(s string) []string {
 
 	// almás -> alma, buffer = stemmer.compoundStem(termAtt.buffer(), termAtt.length());
 
-	caseVariant := false
-
-	items := hs.stem(r, len(r), -1, -1, -1, 0, true, true, false, false, caseVariant)
-	return items
+	caseType := hs.caseOf(s)
+	if caseType == UpperCase {
+		// upper: union exact, title, lower
+		panic("TODO")
+	} else if caseType == TileCase {
+		// title: union exact, lower
+		panic("TODO")
+	} else {
+		// exact match only
+		return hs.stem(r, len(r), -1, -1, -1, 0, true, true, false, false, false)
+	}
 }

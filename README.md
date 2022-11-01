@@ -23,7 +23,7 @@ func main() {
 		log.Fatalf("Unable top open: %s", err)
 	}
 
-	hs, err := hunspell.NewHunSpellReader(aff, dic)
+	hs, err := hunspell.NewHunSpellReader(aff, dic, true)
 	if err != nil {
 		log.Fatalf("HunSpell error: %s", err)
 	}
