@@ -52,7 +52,8 @@ type hunSpell struct {
 	formStep          int
 	hasStemExceptions bool
 
-	ignoreCase bool
+	ignoreCase      bool
+	compoundVersion bool
 }
 
 type HunSpell interface {
@@ -60,7 +61,7 @@ type HunSpell interface {
 	Stem(string) []string
 }
 
-func NewHunSpellReader(aff, dic io.Reader, ignoreCase bool) (HunSpell, error) {
+func NewHunSpellReader(aff, dic io.Reader, ignoreCase bool, compoundVersion bool) (HunSpell, error) {
 
 	h := &hunSpell{
 		seenPatterns:        map[string]int{},
@@ -82,6 +83,7 @@ func NewHunSpellReader(aff, dic io.Reader, ignoreCase bool) (HunSpell, error) {
 		circumfix:           -1,
 		keepcase:            -1,
 		ignoreCase:          ignoreCase,
+		compoundVersion:     compoundVersion,
 	}
 
 	err := h.readAffixFile(aff)
@@ -103,16 +105,36 @@ func (hs *hunSpell) Lookup(s string) *dictEntry {
 }
 
 func (hs *hunSpell) Stem(s string) []string {
-	r := []rune(hs.cleanInput(s))
 
-	f := hs.lookupWord(r, 0, len(r))
-	if f != nil {
-		return []string{s}
+	s = hs.cleanInput(s)
+	r := []rune(s)
+
+	var stems []string
+	if hs.compoundVersion {
+		stems = hs._compoundStem(r, len(r))
+	} else {
+		stems = hs._stem(r, len(r))
 	}
 
-	// almás -> alma, buffer = stemmer.compoundStem(termAtt.buffer(), termAtt.length());
+	return stems
+}
 
-	caseType := hs.caseOf(s)
+func (hs *hunSpell) _compoundStem(word []rune, length int) []string {
+	f := hs.lookupWord(word, 0, length)
+	if f != nil {
+		return []string{string(word)}
+	}
+
+	return hs.compoundStem(word, length)
+}
+
+func (hs *hunSpell) _stem(word []rune, length int) []string {
+	f := hs.lookupWord(word, 0, length)
+	if f != nil {
+		return []string{string(word)}
+	}
+
+	caseType := hs.caseOf(word)
 	if caseType == UpperCase {
 		// upper: union exact, title, lower
 		panic("TODO")
@@ -121,6 +143,6 @@ func (hs *hunSpell) Stem(s string) []string {
 		panic("TODO")
 	} else {
 		// exact match only
-		return hs.stem(r, len(r), -1, -1, -1, 0, true, true, false, false, false)
+		return hs.stem(word, length, -1, -1, -1, 0, true, true, false, false, false)
 	}
 }

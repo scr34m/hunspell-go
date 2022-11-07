@@ -105,9 +105,7 @@ const (
 	UpperCase
 )
 
-func (hs *hunSpell) caseOf(word string) int {
-	runes := []rune(word)
-
+func (hs *hunSpell) caseOf(runes []rune) int {
 	if hs.ignoreCase || len(runes) == 0 || !unicode.IsUpper(runes[0]) {
 		return ExactCase
 	}
@@ -140,4 +138,26 @@ func (hs *hunSpell) cleanInput(s string) string {
 	} else {
 		return s
 	}
+}
+
+func (hs *hunSpell) uniqueStems(word []rune, length int) []string {
+	stems := hs._stem(word, length)
+	if len(stems) < 2 {
+		return stems
+	}
+
+	// XXX ignoreCase
+	return removeDuplicateStr(stems)
+}
+
+func removeDuplicateStr(strSlice []string) []string {
+	allKeys := make(map[string]bool)
+	list := []string{}
+	for _, item := range strSlice {
+		if _, value := allKeys[item]; !value {
+			allKeys[item] = true
+			list = append(list, item)
+		}
+	}
+	return list
 }
