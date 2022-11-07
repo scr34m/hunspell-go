@@ -186,7 +186,7 @@ func (hs *hunSpell) stem(word []rune, length int, previous int, prevFlag rune, p
 						if suffix == 18153 {
 							fmt.Print()
 						}
-						fmt.Printf("steam: depth%dsuffix: %d", recursionDepth, suffix)
+						fmt.Printf("stem: depth%dsuffix: %d", recursionDepth, suffix)
 					}
 					if !hs.checkCondition(condition, word, 0, deAffixedLength, hs.stripData, stripStart, stripLength) {
 						if debug {

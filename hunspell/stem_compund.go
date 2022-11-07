@@ -1,12 +1,16 @@
 package hunspell
 
 import (
+	"fmt"
 	"sort"
 )
 
 func (hs *hunSpell) compoundStem(r []rune, length int) []string {
 	stems := []string{}
 
+	if debug {
+		fmt.Println(string(r))
+	}
 	buffer := hs.compoundStemSplit(r, length, false)
 	if len(buffer) != 0 {
 		temp := ""
@@ -28,12 +32,17 @@ func (hs *hunSpell) compoundStem(r []rune, length int) []string {
 			for j := idx; j < elements; j++ {
 				temp = temp + buffer[j]
 			}
+			if debug {
+				fmt.Println("temp: " + temp)
+			}
 
 			residual_stem := hs.compoundCheck(temp)
+			if debug {
+				fmt.Println("residual_stem: " + residual_stem)
+			}
 			if residual_stem != "" {
 				for j := elements - 1; j >= idx; j-- {
 					buffer = buffer[:len(buffer)-1]
-
 				}
 				buffer = append(buffer, residual_stem)
 				elements = len(buffer)
@@ -68,7 +77,7 @@ func (hs *hunSpell) compoundCheck(residual string) string {
 	if len(residual_stems) != 0 {
 		if len(residual_stems) > 1 {
 			sort.Slice(residual_stems, func(i, j int) bool {
-				return len([]rune(residual_stems[i])) < len([]rune(residual_stems[j]))
+				return len([]rune(residual_stems[i])) > len([]rune(residual_stems[j]))
 			})
 		}
 
