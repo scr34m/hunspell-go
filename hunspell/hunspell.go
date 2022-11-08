@@ -54,11 +54,13 @@ type hunSpell struct {
 
 	ignoreCase      bool
 	compoundVersion bool
+	overrideMap     map[string]string
 }
 
 type HunSpell interface {
 	Lookup(string) *dictEntry
 	Stem(string) []string
+	SetOverrideMap(map[string]string)
 }
 
 func NewHunSpellReader(aff, dic io.Reader, ignoreCase bool, compoundVersion bool) (HunSpell, error) {
@@ -84,6 +86,7 @@ func NewHunSpellReader(aff, dic io.Reader, ignoreCase bool, compoundVersion bool
 		keepcase:            -1,
 		ignoreCase:          ignoreCase,
 		compoundVersion:     compoundVersion,
+		overrideMap:         map[string]string{},
 	}
 
 	err := h.readAffixFile(aff)
@@ -111,7 +114,7 @@ func (hs *hunSpell) Stem(s string) []string {
 
 	var stems []string
 	if hs.compoundVersion {
-		stems = hs._compoundStem(r, len(r))
+		stems = hs.compoundStem(r, len(r))
 	} else {
 		stems = hs._stem(r, len(r))
 	}
@@ -119,13 +122,8 @@ func (hs *hunSpell) Stem(s string) []string {
 	return stems
 }
 
-func (hs *hunSpell) _compoundStem(word []rune, length int) []string {
-	f := hs.lookupWord(word, 0, length)
-	if f != nil {
-		return []string{string(word)}
-	}
-
-	return hs.compoundStem(word, length)
+func (hs *hunSpell) SetOverrideMap(m map[string]string) {
+	hs.overrideMap = m
 }
 
 func (hs *hunSpell) _stem(word []rune, length int) []string {

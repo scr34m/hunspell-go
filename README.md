@@ -23,10 +23,16 @@ func main() {
 		log.Fatalf("Unable top open: %s", err)
 	}
 
-	hs, err := hunspell.NewHunSpellReader(aff, dic, true)
+	ignoreCase := true
+	compoundVersion := true
+	hs, err := hunspell.NewHunSpellReader(aff, dic, ignoreCase, compoundVersion)
 	if err != nil {
 		log.Fatalf("HunSpell error: %s", err)
 	}
+
+	// used in compound stemming to force a specified stem
+	m := map[string]string{"figurácska": "figura"}
+	hs.SetOverrideMap(m)
 
 	log.Println(hs.Stem("barackos"))
 }

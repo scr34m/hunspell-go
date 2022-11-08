@@ -82,13 +82,9 @@ func (hs *hunSpell) compoundCheck(residual string) string {
 		}
 
 		term := residual_stems[0]
-		// TODO hu_override.txt
-		//    final BytesRef stem = stemmerOverrideMap.get(term.chars, term.length(), scratchArcMap, fstReaderMap);
-		//    if (stem != null) {
-		//      spare = ArrayUtil.grow(term.chars, stem.length);
-		//      final int length = UnicodeUtil.UTF8toUTF16(stem, spare);
-		//      return new String(spare, 0, length);
-		//    }
+		if stem, ok := hs.overrideMap[term]; ok {
+			return stem
+		}
 		return string(term)
 	}
 	return ""
